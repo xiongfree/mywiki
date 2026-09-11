@@ -77,7 +77,7 @@
 
 ### 图一：六层全景架构图
 
-```Mermaid
+```mermaid
 graph TB
     classDef bytedance fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px;
@@ -166,7 +166,7 @@ graph TB
 
 ### 图二：交互 Block 层进化分叉 —— RankMixer 与 Bending Curve 的两条路线，及表征健康的第三维
 
-```Mermaid
+```mermaid
 graph LR
     classDef byte fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px;
@@ -230,7 +230,7 @@ HyFormer 是分叉前的关键节点——它首先发现"推荐特征无时序�
 
 ### 图三：推荐大模型的进化树
 
-```Mermaid
+```mermaid
 graph LR
     classDef byte fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#1a1a1a;
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#1a1a1a;
