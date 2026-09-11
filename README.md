@@ -33,7 +33,7 @@
 
 ---
 
-## 📖 rec_model_scaling_infra.md —— 推荐大模型 Scaling 与基建（2025 → 2026）
+## 📖 rec_model_scaling_infra.md —— 推荐大模型 Scaling&Infra（2025 → 2026）
 
 > 把 2025-2026 年工业界的 22 篇论文（Meta、字节、快手、阿里、腾讯微信、港科大）读完之后做的整理，既讲具体技术怎么演进，也讲这些做法背后共同的思路。
 
