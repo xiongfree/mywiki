@@ -1,12 +1,12 @@
 # mywiki
 
-个人 AI-算法 技术笔记的公开版本。三篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`；推荐侧两篇，`rec_model_scaling_infra.md` 是通读后的深度整理与思考，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿。
+个人 AI-算法 技术笔记的公开版本。三篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`；推荐侧两篇，`rec_model_scaling_infra.md` 是通读后的整理，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿。
 
 | 文档 | 主题 | 体量 | 素材 |
 |------|------|------|------|
-| [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构(模型结构&Infra)演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 10 万字 / 14 节 | 39 篇论文梳理 |
-| [rec_model_scaling_infra.md](./rec_model_scaling_infra.md) | 推荐大模型 Scaling&Infra（2025 → 2026）：六层演进体系 + 1 条正交诊断线（表征健康）+ 代际拐点 | 约 12 万字 / 4 节 + 附录 | 2025-2026 年工业界 25 篇核心工作 |
-| [scaling_infra_papers_breakdown.md](./scaling_infra_papers_breakdown.md) | 上一篇的论文底稿：25 篇逐篇精读 + 八个横向维度 | 约 17 万字 / 25 篇 + 8 维度 | 同上，逐篇拆到机制层 |
+| [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构(模型结构&Infra)演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 6 万字 / 14 节 | 39 篇论文梳理 |
+| [rec_model_scaling_infra.md](./rec_model_scaling_infra.md) | 推荐大模型 Scaling&Infra（2025 → 2026）：六层演进体系 + 1 条正交诊断线（表征健康）+ 代际拐点 | 约 6.5 万字 / 4 节 + 附录 | 2025-2026 年工业界 25 篇核心工作 |
+| [scaling_infra_papers_breakdown.md](./scaling_infra_papers_breakdown.md) | 上一篇的论文底稿：25 篇逐篇精读 + 八个横向维度 | 约 9 万字 / 25 篇 + 8 维度 | 同上，逐篇拆到机制层 |
 
 三篇的关系：**同一套方法论，在两个行业推导出了不同的解。** 两边的瓶颈不在一个地方——LLM 卡在显存和长上下文，推荐卡在小算子碎片化和 O(B) 候选打分，所以尽管都在做 Scaling，落地手段差别很大。先看 LLM 那篇再看推荐那两篇，比较容易判断哪些经验可以直接借用，哪些照搬会出问题。
 
