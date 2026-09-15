@@ -1,6 +1,6 @@
 # mywiki
 
-个人 AI-算法 技术笔记的公开版本。三篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`；推荐侧两篇，`rec_model_scaling_infra.md` 是通读后的整理，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿。
+个人 AI-算法 技术笔记的公开版本。三篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`；推荐侧两篇，`rec_model_scaling_infra.md` 是通读后的深度整理与思考，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿。
 
 | 文档 | 主题 | 体量 | 素材 |
 |------|------|------|------|
