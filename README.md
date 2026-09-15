@@ -4,7 +4,7 @@
 
 | 文档 | 主题 | 体量 | 素材 |
 |------|------|------|------|
-| [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构(模型结构&Infra)演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 6 万字 / 14 节 | 39 篇论文梳理 |
+| [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 6 万字 / 14 节 | 39 篇论文梳理 |
 | [rec_model_scaling_infra.md](./rec_model_scaling_infra.md) | 推荐大模型 Scaling&Infra（2025 → 2026）：六层演进体系 + 1 条正交诊断线（表征健康）+ 代际拐点 | 约 6.5 万字 / 4 节 + 附录 | 2025-2026 年工业界 25 篇核心工作 |
 | [scaling_infra_papers_breakdown.md](./scaling_infra_papers_breakdown.md) | 上一篇的论文底稿：25 篇逐篇精读 + 八个横向维度 | 约 9 万字 / 25 篇 + 8 维度 | 同上，逐篇拆到机制层 |
 
