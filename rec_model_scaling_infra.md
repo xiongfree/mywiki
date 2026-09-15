@@ -85,7 +85,7 @@
 
 ### 图一：六层全景架构图
 
-```Mermaid
+```mermaid
 graph TB
     classDef bytedance fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px;
@@ -174,11 +174,11 @@ graph TB
 
 ### 图二：交互 Block 层进化分叉 —— RankMixer 与 ULTRA-HSTU 的算子之争、阿里的改造路线、HyFormer 的信息流拓扑之问，及表征健康的正交维度
 
-```Mermaid
+```mermaid
 graph LR
     classDef byte fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px;
-    classDef converged fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef convergedCls fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
     classDef tencent fill:#ede7f6,stroke:#4527a0,stroke-width:2px;
 
     subgraph origin["起点：统一基座"]
@@ -202,7 +202,7 @@ graph LR
     end
 
     subgraph converge["收敛：多维协同"]
-        MX["MixFormer (字节)<br/>Co-scaling 统一<br/>序列+Dense 协同扩展"]:::converged
+        MX["MixFormer (字节)<br/>Co-scaling 统一<br/>序列+Dense 协同扩展"]:::convergedCls
     end
 
     subgraph rank_health["第三维：表征是否健康展开"]
@@ -238,7 +238,7 @@ HyFormer 的时间位置需要说明：它是 2026 年 1 月的工作，**晚于
 
 ### 图三：推荐大模型的进化树
 
-```Mermaid
+```mermaid
 graph LR
     classDef byte fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#1a1a1a;
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#1a1a1a;
