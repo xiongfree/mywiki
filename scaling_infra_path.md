@@ -44,6 +44,8 @@ MFU ≈ 总体 TCA × η    （η ∈ (0,1]，由算术强度不足与流水线�
 ### 1.2 精度门槛：不满足就无法触发 Tensor Core
 
 Tensor Core 不是默认开启的。它要求特定的数据精度类型，而大量推荐系统仍在 TensorFlow 1.x 上运行——不支持 TF32，未做混合精度改造时矩阵运算全部由 CUDA Core 以 FP32 执行，TCA 为 0。以 H100 为例，FP32 的 CUDA Core 算力约 67 TFLOPS，Tensor Core 半精度约 989 TFLOPS（SXM dense 口径），相差约 15 倍。TCA 为 0 意味着第一层的全部优化无从谈起。存量系统的第一步是让计算图跑在支持 TF32/FP16/BF16 的框架和精度下——可以是升级到 TF2.x 并开启 TF32，可以做混合精度改造使用 FP16/BF16，也可以直接迁移到原生支持这些精度的 PyTorch，三条路殊途同归：让矩阵运算落到 Tensor Core 而不是 CUDA Core。这是一次性的门槛成本，也是后续所有优化的前提。
+<img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/7f1cd3ac-b34d-4dd8-8826-8c80d105d981" />
+
 
 ### 1.3 维度对齐：为什么矩阵形状要凑 16、128 的倍数
 
@@ -51,7 +53,7 @@ Tensor Core 不是默认开启的。它要求特定的数据精度类型，而�
 
 与执行结构并排的是存储层次：寄存器线程私有、访问最快但容量小，寄存器不足时数据溢出到更慢的层次，直接拖累算力；共享内存与 L1 位于 SM 内、由 Block 内线程协作使用，是 tile 数据复用的主战场；L2 由全体 SM 共享，充当全局缓冲；HBM 显存容量与带宽最大，延迟也最高。tile 数据的装载路径固定：Block 级 tile 从显存读进共享内存，Warp 级 tile 从共享内存读进寄存器，寄存器 fragment 参与 Tensor Core 运算。计算单元决定理论算力上限，存储层次决定这个上限能否被触发——大规模 Embedding Lookup 难以在片上复用数据、只能反复访问显存，正是推荐系统 memory-bound 的微观形态。下面三条规则，全部由这套拆解与装载机制导出。
 
-<img width="800" height="800" alt="image" src="https://github.com/user-attachments/assets/c5728197-4524-43c7-9229-7b7129bf98de" />
+<img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/c5728197-4524-43c7-9229-7b7129bf98de" />
 
 
 过了精度门槛，矩阵维度决定 Tensor Core 能否高效执行。三条规则各有实测：
