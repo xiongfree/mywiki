@@ -2,9 +2,9 @@
 
 个人 AI-算法 技术梳理思考的公开版本。
 
-本系列聚焦于 LLM 与推荐大模型两个领域的架构与硬件协同（Scaling&Infra）主题。四篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`，梳理 2017-2026 五大架构路线的演进脉络；推荐侧三篇，`rec_model_scaling_infra.md` 是自上而下的论文整理，梳理 25 篇工业界工作背后的六层演进体系，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿，逐篇拆到机制层，`scaling_infra_path.md` 是自下而上的硬件侧补充，从 GPU 物理约束逐层推到样本组织，验证并补充前两篇的判断。
+本系列聚焦于 LLM 与推荐大模型两个领域的架构与硬件协同（Scaling&Infra）问题。四篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`，梳理 2017-2026 五大架构路线的演进脉络；推荐侧三篇，`rec_model_scaling_infra.md` 是自上而下的论文整理，梳理 25 篇工业界工作背后的六层演进体系，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿，逐篇拆到机制层，`scaling_infra_path.md` 是自下而上的硬件侧补充，从 GPU 物理约束逐层推到样本组织，验证并补充前两篇的判断。
 
-读完这个系列，收获的不是某个具体算法或算子优化技巧，而是架构演进背后的底层逻辑与技术脉络，以及据此判断下一步架构会往哪个方向走的能力。
+读完这个系列，收获的不是某个具体算法或算子优化技巧，而是架构演进背后的底层逻辑与技术脉络——比如拿 LLM 范式演进的逻辑去推想推荐系统下一步可能往哪走。两个领域对比着看，LLM 与推荐都在做 Scaling，却卡在不同的硬件约束上（显存与长上下文，对比小算子碎片化与候选打分），文章重点剖析的正是同样的 Scaling 压力，在不同硬件约束下怎么被逼出不同的架构解法。
 
 | 文档 | 主题 | 体量 | 素材 |
 |------|------|------|------|
@@ -103,12 +103,11 @@
 
 ## 关于引用
 
-- 四篇引用的论文都是公开发表的，文中数字也都来自公开论文或官方摘要（OneRec 的部分数据来自其 GTC 2026 报告）。
-- `llm_arch_evolution.md` 里的 39 条 arXiv 链接逐条核对过编号和标题（最近一次全量重核：2026-08-31）；2026 年那四篇（mHC / AttnResidual / DeepSeek-V4 / Mamba-3）的关键数字也和官方摘要逐项对过。
-- `llm_arch_evolution.md` §2 的十三条判断都按「判断 — 依据 — 可被证伪的预测」来写，并标注了当前的验证情况（✅ 已验证 / 📌 初步印证 / ⚠️ 部分印证 / 待验）。
-- 推荐三篇的分工是：**精确表述以 `scaling_infra_papers_breakdown.md` 为准**，`rec_model_scaling_infra.md` 里的引用为要点摘录，`scaling_infra_path.md` 补充硬件侧的机理推导。核实数值口径、基线设定、实验场景时，请查对应文档：论文数据查 `scaling_infra_papers_breakdown.md`，硬件与实测数据查 `scaling_infra_path.md` 附录 B。
-- `rec_model_scaling_infra.md` 第四节"可推断的突破方向"来自我在广告推荐系统做 Dense&Sparse Scaling 的经验，这部分不在任何一篇论文的正文里，是从已有机理推演的，未经实验验证。
-- `scaling_infra_path.md` 的硬件层素材主要来自作者平时的大量文献阅读、工作积累与深入思考；对照 `rec_model_scaling_infra.md` 的部分以后者为准。
+四篇引用的论文都是公开发表的，文中数字也都来自公开论文或官方摘要（OneRec 部分数据来自其 GTC 2026 报告）。`llm_arch_evolution.md` 的 39 条 arXiv 链接逐条核对过编号和标题（最近一次全量重核：2026-08-31），2026 年四篇（mHC / AttnResidual / DeepSeek-V4 / Mamba-3）的关键数字也和官方摘要逐项对过；§2 的十三条判断按「判断 — 依据 — 可被证伪的预测」写成，并标注当前验证情况（✅ 已验证 / 📌 初步印证 / ⚠️ 部分印证 / 待验）。
+
+核实数值口径、基线设定、实验场景时查对应文档：推荐侧精确表述以 `scaling_infra_papers_breakdown.md` 为准（`rec_model_scaling_infra.md` 里的引用为要点摘录），硬件与实测数据查 `scaling_infra_path.md` 附录 B，两篇对照不一致处以后者为准。
+
+两处主观推演需特别说明：`rec_model_scaling_infra.md` 第四节"可推断的突破方向"来自作者在广告推荐系统做 Dense&Sparse Scaling 的一线经验，不在任何论文正文里，是机理推演，未经实验验证；`scaling_infra_path.md` 的硬件层素材主要来自作者平时的文献阅读、工作积累与思考，同样带有个人判断成分。
 
 ## 说明
 
