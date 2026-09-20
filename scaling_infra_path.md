@@ -51,9 +51,9 @@ Tensor Core 不是默认开启的。它要求特定的数据精度类型，而�
 
 维度规则不是经验口诀，而是从 GEMM 在硬件上的执行模型推出来的。执行结构分四级：SM 是 GPU 的核心，内含寄存器文件、共享内存、调度器与 Tensor Core；Warp 是 32 线程的最小调度粒度，同一 Warp 同时执行同一条指令；Block 运行在单个 SM 上（一个 SM 可同时跑多个 Block），Block 内的 Warp 经共享内存协作；Tensor Core 是 SM 内的矩阵运算单元，被 Warp 调用。一个大 GEMM C[M,N]=A[M,K]×B[K,N] 会被逐级拆解：输出矩阵先切成 Block tile（常为 128×128 或 256×128），每个由一个 Block 独立完成；Block tile 内再切 Warp tile（如 64×64 或 32×64）；Warp 内由 Tensor Core 指令完成 micro-tile 乘加，线程各自持有寄存器 fragment，累加少量元素后合并成完整输出。
 
-与执行结构并排的是存储层次：寄存器线程私有、访问最快但容量小，寄存器不足时数据溢出到更慢的层次，直接拖累算力；共享内存与 L1 位于 SM 内、由 Block 内线程协作使用，是 tile 数据复用的主战场；L2 由全体 SM 共享，充当全局缓冲；HBM 显存容量与带宽最大，延迟也最高。tile 数据的装载路径固定：Block 级 tile 从显存读进共享内存，Warp 级 tile 从共享内存读进寄存器，寄存器 fragment 参与 Tensor Core 运算。计算单元决定理论算力上限，存储层次决定这个上限能否被触发——大规模 Embedding Lookup 难以在片上复用数据、只能反复访问显存，正是推荐系统 memory-bound 的微观形态。下面三条规则，全部由这套拆解与装载机制导出。
-
 <img width="800" height="480" alt="image" src="https://github.com/user-attachments/assets/c5728197-4524-43c7-9229-7b7129bf98de" />
+
+与执行结构并排的是存储层次：寄存器线程私有、访问最快但容量小，寄存器不足时数据溢出到更慢的层次，直接拖累算力；共享内存与 L1 位于 SM 内、由 Block 内线程协作使用，是 tile 数据复用的主战场；L2 由全体 SM 共享，充当全局缓冲；HBM 显存容量与带宽最大，延迟也最高。tile 数据的装载路径固定：Block 级 tile 从显存读进共享内存，Warp 级 tile 从共享内存读进寄存器，寄存器 fragment 参与 Tensor Core 运算。计算单元决定理论算力上限，存储层次决定这个上限能否被触发——大规模 Embedding Lookup 难以在片上复用数据、只能反复访问显存，正是推荐系统 memory-bound 的微观形态。下面三条规则，全部由这套拆解与装载机制导出。
 
 
 过了精度门槛，矩阵维度决定 Tensor Core 能否高效执行。三条规则各有实测：
