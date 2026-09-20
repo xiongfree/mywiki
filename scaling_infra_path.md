@@ -43,6 +43,9 @@ MFU ≈ 总体 TCA × η    （η ∈ (0,1]，由算术强度不足与流水线�
 
 Tensor Core 不是默认开启的。它要求特定的数据精度类型，而大量推荐系统仍在 TensorFlow 1.x 上运行——不支持 TF32，未做混合精度改造时矩阵运算全部由 CUDA Core 以 FP32 执行，TCA 为 0。以 H100 为例，FP32 的 CUDA Core 算力约 67 TFLOPS，Tensor Core 半精度约 989 TFLOPS（SXM dense 口径），相差约 15 倍。TCA 为 0 意味着第一层的全部优化无从谈起。存量系统的第一步是让计算图跑在支持 TF32/FP16/BF16 的框架和精度下——可以是升级到 TF2.x 并开启 TF32，可以做混合精度改造使用 FP16/BF16，也可以直接迁移到原生支持这些精度的 PyTorch，三条路殊途同归：让矩阵运算落到 Tensor Core 而不是 CUDA Core。这是一次性的门槛成本，也是后续所有优化的前提。
 
+<img width="3370" height="1724" alt="image" src="https://github.com/user-attachments/assets/0b3cdaef-8476-46e8-add5-57b07a253f88" />
+
+
 ### 1.3 维度对齐：为什么矩阵形状要凑 16、128 的倍数
 
 维度规则不是经验口诀，而是从 GEMM 在硬件上的执行模型推出来的。执行结构分四级：SM 是 GPU 的核心，内含寄存器文件、共享内存、调度器与 Tensor Core；Warp 是 32 线程的最小调度粒度，同一 Warp 同时执行同一条指令；Block 运行在单个 SM 上（一个 SM 可同时跑多个 Block），Block 内的 Warp 经共享内存协作；Tensor Core 是 SM 内的矩阵运算单元，被 Warp 调用。一个大 GEMM C[M,N]=A[M,K]×B[K,N] 会被逐级拆解：输出矩阵先切成 Block tile（常为 128×128 或 256×128），每个由一个 Block 独立完成；Block tile 内再切 Warp tile（如 64×64 或 32×64）；Warp 内由 Tensor Core 指令完成 micro-tile 乘加，线程各自持有寄存器 fragment，累加少量元素后合并成完整输出。
