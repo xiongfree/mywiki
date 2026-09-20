@@ -11,7 +11,7 @@
 | [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构(模型结构&Infra)演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 6 万字 / 14 节 | 39 篇论文梳理 |
 | [rec_model_scaling_infra.md](./rec_model_scaling_infra.md) | 推荐大模型 Scaling&Infra（2025 → 2026）：六层演进体系 + 1 条正交诊断线（表征健康）+ 代际拐点 | 约 6.5 万字 / 4 节 + 附录 | 2025-2026 年工业界 25 篇核心工作 |
 | [scaling_infra_papers_breakdown.md](./scaling_infra_papers_breakdown.md) | 上一篇的论文底稿：25 篇逐篇精读 + 八个横向维度 | 约 9 万字 / 25 篇 + 8 维度 | 同上，逐篇拆到机制层 |
-| [scaling_infra_path.md](./scaling_infra_path.md) | 推荐系统的算力兑现路径：从利用率到 IO 的四层硬件约束，回答"硬件为什么只奖励那些做法" | 约 2 万字 / 5 节 + 附录 | 文献阅读与工作积累中的一手实测 + 与前两篇逐条对照 |
+| [scaling_infra_path.md](./scaling_infra_path.md) | 推荐系统的算力兑现路径：从GPU利用率到 IO 的四层硬件约束，回答"硬件为什么只奖励那些做法" | 约 2 万字 / 5 节 + 附录 | 文献阅读与工作积累中的一手实测 + 与前两篇逐条对照 |
 
 四篇的关系：**同一套方法论，在两个行业推导出了不同的解，推荐侧又补了一层从硬件往上看的验证。** LLM 与推荐两边的瓶颈不在一个地方——LLM 卡在显存和长上下文，推荐卡在小算子碎片化和 O(B) 候选打分，所以尽管都在做 Scaling，落地手段差别很大。推荐三篇各自的定位：`rec_model_scaling_infra.md` 负责脉络和判断，自上而下、读起来快；`scaling_infra_papers_breakdown.md` 负责证据，逐篇写清每篇论文的机制、动机和线上数据；`scaling_infra_path.md` 负责机理，自下而上，把前两篇里偏定性的判断换算成硬件层面可计算的数字，两个方向在它的第 5 节汇合对照，标出了三处没能对齐的地方。**`rec_model_scaling_infra.md` 的每个结论都能在 `scaling_infra_papers_breakdown.md` 找到对应的论文出处**，想核实数字或机制表述查后者，想知道判断背后的硬件成因查 `scaling_infra_path.md`。建议顺序：先看 LLM 那篇建立参照，再按上述顺序看推荐三篇。
 
