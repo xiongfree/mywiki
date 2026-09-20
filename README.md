@@ -1,16 +1,17 @@
 # mywiki
 
-个人 AI-算法 技术笔记的公开版本。三篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`；推荐侧两篇，`rec_model_scaling_infra.md` 是通读后的整理，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿。
+个人 AI-算法 技术笔记的公开版本。四篇长文，讲的是同一件事：Scaling 与 Infra 的相互作用——模型规模能放大到哪，取决于硬件兑现了多少；而硬件的约束又反过来决定架构往哪收敛。LLM 侧是 `llm_arch_evolution.md`；推荐侧三篇，`rec_model_scaling_infra.md` 是自上而下的论文整理，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿，`scaling_path.md` 是自下而上的硬件侧补充。
 
 | 文档 | 主题 | 体量 | 素材 |
 |------|------|------|------|
-| [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 6 万字 / 14 节 | 39 篇论文梳理 |
+| [llm_arch_evolution.md](./llm_arch_evolution.md) | LLM 架构(模型结构&Infra)演进深度脉络（2017 → 2026）：五大路线的代际发展、机制原理与相互关系 | 约 6 万字 / 14 节 | 39 篇论文梳理 |
 | [rec_model_scaling_infra.md](./rec_model_scaling_infra.md) | 推荐大模型 Scaling&Infra（2025 → 2026）：六层演进体系 + 1 条正交诊断线（表征健康）+ 代际拐点 | 约 6.5 万字 / 4 节 + 附录 | 2025-2026 年工业界 25 篇核心工作 |
 | [scaling_infra_papers_breakdown.md](./scaling_infra_papers_breakdown.md) | 上一篇的论文底稿：25 篇逐篇精读 + 八个横向维度 | 约 9 万字 / 25 篇 + 8 维度 | 同上，逐篇拆到机制层 |
+| [scaling_path.md](./scaling_path.md) | 推荐系统的算力兑现路径：从利用率到 IO 的四层硬件约束，回答"硬件为什么只奖励那些做法" | 约 2 万字 / 5 节 + 附录 | 知乎"推荐系统的算力突围"系列一手实测 + 与前两篇逐条对照 |
 
-三篇的关系：**同一套方法论，在两个行业推导出了不同的解。** 两边的瓶颈不在一个地方——LLM 卡在显存和长上下文，推荐卡在小算子碎片化和 O(B) 候选打分，所以尽管都在做 Scaling，落地手段差别很大。先看 LLM 那篇再看推荐那两篇，比较容易判断哪些经验可以直接借用，哪些照搬会出问题。
+四篇的关系：**同一套方法论，在两个行业推导出了不同的解，推荐侧又补了一层从硬件往上看的验证。** LLM 与推荐两边的瓶颈不在一个地方——LLM 卡在显存和长上下文，推荐卡在小算子碎片化和 O(B) 候选打分，所以尽管都在做 Scaling，落地手段差别很大。推荐侧内部，`rec_model_scaling_infra.md` 与 `scaling_infra_papers_breakdown.md` 是自上而下——从论文出发找规律；`scaling_path.md` 是自下而上——从 GPU 的物理约束出发，逐层推导出同一批判断，两个方向在 `scaling_path.md` 第 5 节汇合，逐条对照、互相验证，也标出了三处没能对齐的地方。建议顺序：先看 LLM 那篇建立参照，再看推荐三篇——`rec_model_scaling_infra.md` 建立脉络，`scaling_infra_papers_breakdown.md` 核实论文出处，`scaling_path.md` 补上硬件侧的机理与数字。
 
-推荐的两篇是一组，分工明确：`rec_model_scaling_infra.md` 负责脉络和判断，读起来快；`scaling_infra_papers_breakdown.md` 负责证据，逐篇写清每篇论文的机制、动机和线上数据。**前者的每个结论都能在后者找到对应的论文出处**，想核实某个数字或某个机制的准确表述，查后者。
+推荐的三篇分工明确：`rec_model_scaling_infra.md` 负责脉络和判断，读起来快；`scaling_infra_papers_breakdown.md` 负责证据，逐篇写清每篇论文的机制、动机和线上数据；`scaling_path.md` 负责机理，把前两篇里偏定性的判断换算成硬件层面可计算的数字。**`rec_model_scaling_infra.md` 的每个结论都能在 `scaling_infra_papers_breakdown.md` 找到对应的论文出处**，想核实某个数字或某个机制的准确表述，查后者；想知道某个判断背后的硬件成因，查 `scaling_path.md`。
 
 ---
 
@@ -78,16 +79,36 @@
 
 ---
 
+## 📖 scaling_path.md —— 推荐系统的算力兑现路径：从利用率到 IO 的四层硬件约束
+
+> `rec_model_scaling_infra.md` 是自上而下：从论文出发找规律，硬件指标在那里是分析工具。这篇是自下而上：从 GPU 的物理约束出发，经利用率、计算强度、显存、IO 四层逐级向上推，回答同一个问题的另一半——硬件为什么只奖励那些做法。素材主要来自知乎"推荐系统的算力突围"系列（一篇总览 + 四篇正文），包含作者的一手工程实测与线上 AUC 经验；跟前两篇的对照部分以论文整理为准，数值口径差异统一列在附录。
+
+**为什么写这篇**：`rec_model_scaling_infra.md` 里不少判断是定性的——"接口要统一成一个交互 Block""长序列这条路走得通""特征工程这条老路快到头了"。这些判断为什么成立，答案在硬件执行模型里，不在论文摘要里。这篇要做的事，是把这些判断换算成具体数字：Block 的隐层维度低于多少就跨不过硬件拐点、序列长度和显存开销之间是什么关系、特征堆多了梯度会怎样被抢占。四层是一条因果链，任何一层不通，堆卡都是空转：范式先要统一成大 GEMM 才能吃到 Tensor Core，吃到之后还要算术强度过硬件拐点才算真的用上算力，用上算力之后显存要跟得上 batch 和序列长度，显存跟得上之后 IO 要跟得上显存——业界普遍卡在第一层。
+
+**几条主要观点**：
+
+- **利用率要看对口径**：GPU Utilization 和 SM Activity 这两个常见指标都不能跨系统比较，只有 Tensor Core 口径（TCA/MFU）才是真账，多数系统"利用率不低但算力没兑现"，原因在这里。
+- **矩阵维度决定 Tensor Core 效率**：维度不是 16 的倍数、M/N 不是 128 的倍数、tile 数不是 SM 数的倍数，都会造成实测可见的性能损失，A100 上 K 差一个元素耗时能翻倍。
+- **加宽比加深更有效**：在 memory-bound 区间，加深模型不提升算术强度，是无效投资；反解 Roofline 拐点可以算出隐层维度的硬下限（约 400 量级），这是"统一交互 Block 应该做多大"的硬数字依据。
+- **Flash Attention 是长序列可行性的前提，不是加速锦上添花**：不做 Flash Attention 时，QK^T 的算术强度有一个和序列长度无关的上限，序列拉长在数学上走不通；Flash Attention 把这个关系变成线性增长，才真正打开长序列这条路。
+- **样本组织和特征取舍同时是系统问题**：point-wise 样本存在结构性冗余，批式重组配合 decoder-only 结构能让用户序列只算一遍；记忆性特征除了挤占泛化能力，也挤占数据通路带宽，两者是同一个判断的两面。
+
+**章节结构**：§0 四层因果链总览 ｜ §1 利用率 ｜ §2 Roofline 与计算强度 ｜ §3 显存 ｜ §4 IO 与样本范式 ｜ §5 合流：逐条对照表、系列验证了什么、补充了什么、三处张力、合并后的行动顺序 ｜ 附录 A 素材来源 ｜ 附录 B 数值口径备忘
+
+**引用时请注意**：与 `rec_model_scaling_infra.md` 的对照关系以第 5.1 节的逐条对照表为准，其中标出了两份文档确实没能对齐的三处张力（时间窗甜点与预训练样本重组是否冲突、流式训练系统的长期命运、峰值算力的口径混用），不是全部对得上。核实基线设定和数值口径时查附录 B。
+
+---
+
 ## 关于引用
 
-- 三篇引用的论文都是公开发表的，文中数字也都来自公开论文或官方摘要（OneRec 的部分数据来自其 GTC 2026 报告）。
+- 四篇引用的论文都是公开发表的，文中数字也都来自公开论文或官方摘要（OneRec 的部分数据来自其 GTC 2026 报告）。
 - `llm_arch_evolution.md` 里的 39 条 arXiv 链接逐条核对过编号和标题（最近一次全量重核：2026-08-31）；2026 年那四篇（mHC / AttnResidual / DeepSeek-V4 / Mamba-3）的关键数字也和官方摘要逐项对过。
 - `llm_arch_evolution.md` §2 的十三条判断都按「判断 — 依据 — 可被证伪的预测」来写，并标注了当前的验证情况（✅ 已验证 / 📌 初步印证 / ⚠️ 部分印证 / 待验）。
-- 推荐两篇的分工是：**精确表述以 `scaling_infra_papers_breakdown.md` 为准**，`rec_model_scaling_infra.md` 里的引用为要点摘录。核实数值口径、基线设定、实验场景时，请查 `scaling_infra_papers_breakdown.md` 的对应篇目。
+- 推荐三篇的分工是：**精确表述以 `scaling_infra_papers_breakdown.md` 为准**，`rec_model_scaling_infra.md` 里的引用为要点摘录，`scaling_path.md` 补充硬件侧的机理推导。核实数值口径、基线设定、实验场景时，请查对应文档：论文数据查 `scaling_infra_papers_breakdown.md`，硬件与实测数据查 `scaling_path.md` 附录 B。
 - `rec_model_scaling_infra.md` 第四节"可推断的突破方向"来自我在广告推荐系统做 Dense&Sparse Scaling 的经验，这部分不在任何一篇论文的正文里，是从已有机理推演的，未经实验验证。
 
 ## 说明
 
 - 文中"作者洞察""可推断的突破方向"这些部分都是个人看法，不代表任何机构立场。
-- 三篇都有较多 mermaid 图，建议在 GitHub 网页上阅读，或使用支持 mermaid 渲染的 Markdown 阅读器。
+- 四篇都有较多 mermaid 图（`scaling_path.md` 除外，以文字推导和表格为主），建议在 GitHub 网页上阅读，或使用支持 mermaid 渲染的 Markdown 阅读器。
 - 如发现事实错误或引用问题，欢迎提 Issue。
