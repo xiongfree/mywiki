@@ -58,7 +58,7 @@ Tensor Core 不是默认开启的。它要求特定的数据精度类型，而�
 
 过了精度门槛，矩阵维度决定 Tensor Core 能否高效执行。三条规则背后是同一个区分：M、N 决定切出多少个 tile、能不能填满 SM，是"数量"问题；K 决定每个 tile 内部循环多少轮 micro-tile 乘加、数据被复用几次，是"深度"问题。前两条规则管 M/N，最后一条管 K。
 
-<img width="400" height="480" alt="image" src="https://github.com/user-attachments/assets/d8852ba0-e8fb-43f4-8a61-27a9eed9142a" />
+<img width="400" height="480" alt="image" src="https://github.com/user-attachments/assets/9b05ddf9-c729-4ef9-8a4b-51822617a52e" />
 
 **M/N 取 128 或 256 的倍数（M/N 方向，tile 切分本身）。** 
 
