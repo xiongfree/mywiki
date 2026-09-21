@@ -93,12 +93,27 @@ Roofline 模型把计算能力与存储带宽的关系压进一条公式：
 
 ```text
 Performance = min(Peak FLOPs/s, AI × Memory Bandwidth)
+
+加速器强度 = FLOP/s / Bytes/s  → H100 约 295 FLOP/byte
+算术强度AI = FLOPs / Bytes        → 该操作每搬运 1 字节能做多少 FLOP
 ```
 
 AI（Arithmetic Intensity，算术强度）= 计算量 / 访存量，单位 FLOPs/Byte。AI 低于拐点时性能被带宽卡住（memory-bound），高于拐点时被算力卡住（compute-bound）。H100 SXM 的拐点约 295 FLOPs/Byte（989 TFLOPS ÷ 3.35 TB/s）。推荐系统的普遍状态是 AI 低于 10，处在最左端——这意味着买了 H100 的算力，实际用到的只有它的显存带宽。
 
 <img width="600" height="480" alt="image" src="https://github.com/user-attachments/assets/9b935e0b-1bbf-4cfa-a1c1-0f9642a8d892" />
+Roofline 图直观地展示了算术强度与性能的关系：
 
+X 轴：算术强度（每个"切片"对应一个特定算法）
+Y 轴：实际达到的 FLOP/s
+每条分段线性曲线：一个特定的硬件平台（H100、B200 等）
+转折点（kink）：该硬件的加速器强度——转折点左侧是 memory-bound 区域（斜率上升），右侧是 compute-bound 区域（水平天花板）
+Percy 解释："如果你的操作在转折点左侧，说明算术强度不够高，实际 FLOPs 远低于硬件的峰值能力。只有当算术强度超过转折点，你才能接近峰值 FLOP/s。"
+
+```text
+MFU 与 Roofline 的关系：
+MFU = min(1, 算术强度 / 加速器强度)
+```
+这就是 MFU 通常只有 0.5 左右的原因——很多操作的算术强度低于加速器强度，导致 GPU 的计算单元在"空转等待数据"。
 
 对 GEMM（A[M,K]×B[K,N]→C[M,N]，精度字节 b）：
 
