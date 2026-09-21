@@ -97,6 +97,9 @@ Performance = min(Peak FLOPs/s, AI × Memory Bandwidth)
 
 AI（Arithmetic Intensity，算术强度）= 计算量 / 访存量，单位 FLOPs/Byte。AI 低于拐点时性能被带宽卡住（memory-bound），高于拐点时被算力卡住（compute-bound）。H100 SXM 的拐点约 295 FLOPs/Byte（989 TFLOPS ÷ 3.35 TB/s）。推荐系统的普遍状态是 AI 低于 10，处在最左端——这意味着买了 H100 的算力，实际用到的只有它的显存带宽。
 
+<img width="600" height="480" alt="image" src="https://github.com/user-attachments/assets/9b935e0b-1bbf-4cfa-a1c1-0f9642a8d892" />
+
+
 对 GEMM（A[M,K]×B[K,N]→C[M,N]，精度字节 b）：
 
 ```text
