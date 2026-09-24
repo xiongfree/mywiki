@@ -133,18 +133,20 @@ AI ≈ 2MNK / b(MK + KN + MN)
 
 ### 2.2 提升算术强度：加宽比加深更有效
 
-加宽（增大 d_model、head_dim、FFN 中间层）同时提升 FLOPs 和 AI；加深（堆更多层）只提升 FLOPs，单层 AI 不变。在 memory-bound 区间，加深的算力增长被同样的访存增长抵消——**加深在 memory-bound 区是无效投资，这是反直觉但严格成立的结论**。
+把加宽、加深代入 2.1 节的 AI 公式就能看出两者的本质差异。加宽（增大 d_model、head_dim、FFN 中间层）改变的是单层 GEMM 的 M/N/K 本身——对应 2.1 节结论一里"维度同步放大"的情形，所以同时提升 FLOPs 和 AI；加深（堆更多层）是重复堆叠同样形状的层，单层的 M、N、K 都不变，FLOPs 和访存量按层数同步线性增长，两者的比值（AI）不变，所以只提升 FLOPs，单层 AI 不变。
 
-但加宽优先不等于深度无用。LLM 的 compute-optimal 研究（Chinchilla）给出近似最优宽深比 d_model∝P^0.4、n_layers∝P^0.3：深度仍贡献建模能力与表达深度，只是在 memory-bound 区其算力增长被访存增长同步抵消；跨过拐点后，加深恢复为有效投资。最优宽深比依赖特征数量、embedding 尺寸、序列长度与任务目标权重，推荐系统需要像 LLM 一样系统性探索自己的宽深边界，而不是套用单边结论。
+在 memory-bound 区，Roofline 公式里的性能 = AI×带宽，AI 不变、带宽是硬件常数，性能就不会因为堆层数而提升——即使总 FLOPs 确实堆多了。这就是"反直觉"的地方：直觉上算力投入（FLOPs）越多，产出应该越多，但在 memory-bound 区，有效产出只取决于 AI 和带宽，与 FLOPs 总量无关，多堆的 FLOPs 换不来更多产出，等于白算。**加深在 memory-bound 区是无效投资，这是反直觉但严格成立的结论**。
 
-用 Transformer Base 的两个大算子算具体数字（b=2，BL 为 batch×序列长度）：
+用 Transformer Base 的两个大算子算具体数字验证这条结论（b=2，BL 为 batch×序列长度）：
 
 - QKV GEMM（[BL,d]×[d,3d]）：BL 远大于 d 时 AI ≈ 1.5·d/b，随 d 线性增长；d 远大于 BL 时饱和于 2·BL/b
 - FFN 单次 GEMM（[BL,d]×[d,4d]）：BL 远大于 d 时 AI ≈ 1.6·d/b
 
 对 H100 的 295 拐点反解：QKV 需要 d ≥ 400，FFN 需要 d ≥ 375。**推荐系统常用的 128/256 隐层维度，无论怎么加 batch 和序列长度，AI 都够不到 295**——小维度下 M 维增长收敛到的常数上限太低。这是"统一交互 Block 应该做多大"的第一个硬数字下限，也是对主线 2 的直接支撑：RankMixer 路线把主干做成大维度 MLP-Mixer，不只是结构上的统一，是过拐点的必要条件。
 
-算术强度还有一层算法侧解读：AI powers AI。更高 AI 的结构，意味着相同访存信息下计算的连接与交互更密集，更能产生智能——Scaling Law 研究中，无论扩参数还是扩 token，高 AI 的 Transformer 都比低 AI 的 LSTM 有更好的 Scaling 曲线。推荐系统持续借鉴 NLP 成果，根源在于用户行为序列与文本 token 序列的定义相似：拉长序列不只是线性提升 AI，也在扩宽可挖掘的知识面。AI 因此不只是省钱指标，也是度量算法潜力能走多远的标尺。
+但加宽优先不等于深度无用，上面的结论有适用范围的限定。LLM 的 compute-optimal 研究（Chinchilla）给出近似最优宽深比 d_model∝P^0.4、n_layers∝P^0.3：深度仍贡献建模能力与表达深度，只是在 memory-bound 区其算力增长被访存增长同步抵消；跨过拐点后，加深恢复为有效投资。最优宽深比依赖特征数量、embedding 尺寸、序列长度与任务目标权重，推荐系统需要像 LLM 一样系统性探索自己的宽深边界，而不是套用单边结论。
+
+以上是算术强度在硬件层面的意义（决定 memory-bound 还是 compute-bound）。算术强度还有一层算法侧解读：AI powers AI。更高 AI 的结构，意味着相同访存信息下计算的连接与交互更密集，更能产生智能——Scaling Law 研究中，无论扩参数还是扩 token，高 AI 的 Transformer 都比低 AI 的 LSTM 有更好的 Scaling 曲线。推荐系统持续借鉴 NLP 成果，根源在于用户行为序列与文本 token 序列的定义相似：拉长序列不只是线性提升 AI，也在扩宽可挖掘的知识面。AI 因此不只是省钱指标，也是度量算法潜力能走多远的标尺。
 
 ### 2.3 QK^T 的 L² 陷阱与 Flash Attention 的战略地位
 
