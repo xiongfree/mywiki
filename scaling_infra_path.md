@@ -71,7 +71,12 @@ GEMM 要被 Tensor Core 执行，首先得过精度这一关：Tensor Core 不�
 
 <img width="400" height="440" alt="image" src="https://github.com/user-attachments/assets/9b05ddf9-c729-4ef9-8a4b-51822617a52e" />
 
+```text
+SM（Streaming Multiprocessor，流式多处理器）：
+SM是将线程块（Thread Block）映射到物理硬件并完成实际计算的根本单元。当GPU内核（Kernel）启动时，线程块被分配到空闲的SM上，SM负责将其内部的线程束（Warp，32线程）解码并派发至CUDA核心（处理通用运算）或Tensor Core（处理矩阵乘加运算）执行。没有SM的调度，CUDA核心和Tensor Core无法自主运行。
 
+Tensor Core是专为执行矩阵乘加运算（FMA） 而设计的硬件单元，在处理深度学习和科学计算中的核心运算时，效率远超通用CUDA核心。A100支持多种数据精度，特别是引入了创新的TensorFloat-32 (TF32) 格式。它能在不改变代码的情况下，以FP32的精度和范围实现接近FP16的运算速度。A100的Tensor Core支持结构化稀疏技术。它能利用AI模型中的稀疏性（即大量参数为零），将吞吐量进一步提高一倍。
+```
 执行链和存储链合起来，导出下面三条规则：前两条管 M/N，最后一条管 K。
 
 #### 三条规则：M/N 管 tile 切分，K 管指令级浪费
