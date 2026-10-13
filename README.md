@@ -1,6 +1,6 @@
 # mywiki
 
-个人 AI-算法 技术梳理思考的公开版本。
+个人 AI-算法 技术梳理思考的公开版本。（https://github.com/xiongfree/yulingxiong）
 
 推荐系统的发展正处在代际拐点上，这个拐点正是 LLM 带来的生成式范式与大模型 Scaling 能力——推荐系统开始借鉴 LLM 的架构与 Infra 方法论，这也是本系列把两个领域放在一起讲的原因。四篇长文聚焦 LLM 与推荐大模型的架构与硬件协同（Scaling&Infra），讲的是同一件事：模型规模能放大到哪，取决于硬件兑现了多少，硬件的约束又反过来决定架构往哪收敛，所以 Scaling 从一开始就得和 Infra 工程侧一起 co-design。LLM 侧是 `llm_arch_evolution.md`，梳理 2017-2026 五大架构路线的演进脉络；推荐侧三篇，`rec_model_scaling_infra.md` 是自上而下的论文整理，梳理 25 篇工业界工作背后的六层演进体系，`scaling_infra_papers_breakdown.md` 是它的逐篇论文精读底稿，逐篇拆到机制层，`scaling_infra_path.md` 是自下而上的硬件侧补充，从 GPU 物理约束逐层推到样本组织，验证并补充前两篇的判断。
 
