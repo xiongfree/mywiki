@@ -524,17 +524,17 @@ RMSNorm（轴A）+ Pre-Norm 或 Sandwich（轴B）+ QKNorm（轴C）
 
 先回顾传统残差——历史信息 $`x`$ 与子层新信息 $`f(x)`$ 以固定 1:1 累加，深层历史项因此无控膨胀：
 
-$$x_l = x_{l-1} + f_{l-1}(x_{l-1})$$
+![公式：x_l = x_{l-1} + f_{l-1}(x_{l-1})](images/formulas/f527_residual_std.png)
 
 **① HC / mHC：把"固定标量 1"换成可学习矩阵（静态调度）**
 
 HC 的基本形是给历史项和新信息项各配一个可学习权重：
 
-$$x_l = B_l\, x_{l-1} + A_l\, f_{l-1}(x_{l-1})$$
+![公式：x_l = B_l x_{l-1} + A_l f_{l-1}(x_{l-1})](images/formulas/f533_residual_hc.png)
 
 HC 进一步把单条残差流扩展为 $`n`$ 份并行残差流 $`X_l \in \mathbb{R}^{n \times d}`$，用可学习矩阵在流之间做混合（即"多通道残差 + 可学习路由"）：
 
-$$X_l = \mathcal{B}_l\, X_{l-1} + \mathcal{A}_l\, f_{l-1}(\cdot)$$
+![公式：X_l = B_l X_{l-1} + A_l f_{l-1}(·)](images/formulas/f537_residual_hc_vec.png)
 
 **mHC 的核心改进不是"改成跨层全连接"，而是给这套可学习权重加约束**：HC 的自由矩阵 $`\mathcal{A}, \mathcal{B}`$ 破坏了原始残差的恒等映射性质（$`\partial x_l / \partial x_{l-1}`$ 不再含"+1"保底项），导致深层训练不稳。mHC 把残差映射矩阵**投影到 Birkhoff polytope（双随机矩阵构成的流形）**，用 Sinkhorn-Knopp 算法迭代投影（V4 中固定 20 次迭代）。双随机约束把矩阵谱范数界在 1 以内，使信号逐层传播是非扩张的（non-expansive），从而在保留可学习灵活性的同时恢复梯度保底通路。注意这里的关键机制是"谱范数不超过 1 所以信号不会被逐层放大"，不是字面意义上把矩阵还原成单位矩阵。
 
@@ -544,11 +544,11 @@ $$X_l = \mathcal{B}_l\, X_{l-1} + \mathcal{A}_l\, f_{l-1}(\cdot)$$
 
 AttnRes 保留当层子层贡献，但把"对历史层的聚合"从固定累加换成注意力加权：
 
-$$x_l = f_{l-1}(x_{l-1}) + \sum_{i=0}^{l-1} \alpha_{l,i}(x)\, x_i$$
+![公式：x_l = f_{l-1}(x_{l-1}) + sum alpha_(l,i)(x) x_i](images/formulas/f547_dense_residual.png)
 
 其中权重不是静态矩阵，而是由 attention 实时算出：
 
-$$\alpha_{l,i} = \text{Softmax}_i\!\left( \frac{(x_{l-1}W_Q)(x_i W_K)^{\top}}{\sqrt{d}} \right)$$
+![公式：alpha_(l,i) = Softmax_i( (x_(l-1)W_Q)(x_i W_K)^T / sqrt(d) )](images/formulas/f551_dense_residual_weight.png)
 
 数学本质：**动态的、依输入而变的路由**——网络按当前输入实时判断该从前序哪几层取多少信息。由于对所有前序层做 attention 的显存/通信开销过大，实际采用 **Block AttnRes**（层分组、在块级表征上做 attention）。
 
@@ -750,30 +750,33 @@ Delta 支流:  DeltaNet → Gated DeltaNet(2024) → KDA/Kimi Linear(2025)
 **框架类比**：Transformer 注意力是"查字典"（Q 去 K 里查 V，字典随序列膨胀，$`O(N^2)`$）；线性类是"做笔记"（历史信息压缩进固定大小状态矩阵 $`S`$ 中递推，$`O(N)`$）。以下逐篇给出核心数学公式，补充上方"精读确认"段落未展开的原理细节。
 
 **① Mamba — 选择性 SSM**：让控制参数随输入 $`x_t`$ 动态变化：
-$$ \Delta_t = f(x_t), \quad \bar{A}_t = \exp(\Delta_t A), \quad h_t = \bar{A}_t h_{t-1} + \bar{B}_t x_t $$
+![公式：Mamba选择性SSM递推](images/formulas/f753_mamba_ssm.png)
 $`\Delta_t`$ 大则 $`\bar{A}\to 0`$（覆盖旧记忆），小则 $`\bar{A}\to 1`$（保留旧记忆）——模型据此选择性遗忘或记忆。
 
 **② Mamba-2 / SSD — 理论统一**：递推展开为矩阵 $`Y = MX`$，$`M`$ 为结构化半可分矩阵：
-$$ M_{ij} = C_i \left( \prod_{k=j+1}^i \bar{A}_k \right) \bar{B}_j \quad (i \ge j) $$
+![公式：Mamba-2 SSD结构化半可分矩阵](images/formulas/f757_mamba2_ssd.png)
 $`M`$ 等价于 Transformer 的 $`\text{Softmax}(QK^T)`$，但通过递推隐式计算——"做笔记"与"查字典"是同一矩阵的不同分解。
 
 **③ Lightning Attention-2 — tiling 分块**：块间线性递推传状态，块内矩阵乘法并行算：
-$$ S_n = S_{n-1} + \phi(K_n)^T V_n \quad \text{(块间递推)} $$
-$$ Y_n = Q_n S_{n-1} + \text{CausalAttn}(Q_n, K_n, V_n) \quad \text{(块内并行)} $$
+![公式：Lightning Attention块间递推 S_n = S_(n-1) + phi(K_n)^T V_n](images/formulas/f761_lightning_recur.png)
+（块间递推）
+![公式：Lightning Attention块内并行 Y_n = Q_n S_(n-1) + CausalAttn(Q_n,K_n,V_n)](images/formulas/f762_lightning_parallel.png)
+（块内并行）
 用小块 GEMM 替代逐 token 串行前缀和，让线性注意力在 GPU 上兑现理论速度。
 
 **④ Gated DeltaNet — 门控 + Delta Rule**：
-$$ S_t = \alpha_t S_{t-1} + \beta_t\, k_t \big( v_t - S_{t-1}^\top k_t \big)^\top $$
+![公式：Gated DeltaNet S_t = alpha_t S_(t-1) + beta_t k_t(v_t - S_(t-1)^T k_t)^T](images/formulas/f766_gated_deltanet.png)
 $`\alpha_t`$ 批量擦除旧记忆（宏观衰减），$`(v_t - S_{t-1}^\top k_t)`$ 算预测误差并定点修正（微观精准更新）——门控与 delta rule 互补。
 > 记号约定：本文统一采用 $`S \in \mathbb{R}^{d_k \times d_v}`$（写入 $`k v^\top`$、读取 $`S^\top q`$，§10 会进一步给出三家统一的递推骨架）。注意误差项 $`v_t - S_{t-1}^\top k_t`$ 正好复用了读取式的形式——先用 $`k_t`$ 当 query 从旧状态里“读出旧值”，再与真值 $`v_t`$ 作差，这正是 delta rule “先查再改”的物理含义。
 
 **⑤ KDA / Kimi Linear — 细粒度门控 + DPLR**：
-$$ S_t = \text{diag}(\boldsymbol{\alpha}_t) S_{t-1} + \text{DeltaUpdate}, \quad A = \Lambda + P Q^T \quad \text{(DPLR)} $$
+![公式：KDA diag(alpha_t)S_(t-1) + DeltaUpdate, A = Lambda + PQ^T (DPLR)](images/formulas/f771_kda_dplr.png)
+（DPLR：对角 + 低秩结构）
 $`\boldsymbol{\alpha}_t`$ 让不同特征维度有不同遗忘速度；DPLR 结构大幅降低矩阵运算复杂度。
 
 **⑥ Mamba-3 — 复数状态 + MIMO**：
-$$ h_t = e^{\Delta_t \lambda} h_{t-1} + \Delta_t B x_t \quad (\lambda \in \mathbb{C}), \quad H_t = \bar{A} H_{t-1} + \bar{B} X_t \quad (X_t \in \mathbb{R}^{k}, \text{MIMO}) $$
-复数特征值 $`\lambda`$ 增加相位/周期表达能力；MIMO 允许一次处理 $`k`$ 个 token 提升吞吐。
+![公式：Mamba-3复数状态更新 h_t = e^(Delta_t lambda) h_(t-1) + Delta_t B x_t, lambda属于复数](images/formulas/f775_mamba3_mimo.png)
+复数特征值 $`\lambda`$ 增加相位/周期表达能力；MIMO 变体支持一次处理 $`k`$ 个 token 提升吞吐（MIMO 公式与上图递推形式相同，仅输入输出维度从标量/向量扩展为多通道）。
 
 ### 路线五内关系
 
